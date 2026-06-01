@@ -154,6 +154,22 @@ Group files by resource (e.g., `user_handlers.go`, `user_routes.go`, `user.go`).
 - Do not add raw Gin routes for API endpoints; use `huma.Get/Post/...`
 - Gin raw routes (`r.GET/POST`) are only for non-API concerns (health check, static files, metrics)
 
+## Database Migration
+
+**マイグレーション管理は必ずPrismaを使用すること。** 生のSQLファイルや他のマイグレーションツールは使用しない。
+
+### ワークフロー
+
+1. `prisma/schema.prisma` を編集してスキーマを変更する
+2. `npx prisma migrate dev --name <migration_name>` でマイグレーションを生成・適用する
+3. `npx prisma generate` でGoクライアントを再生成する
+
+### マイグレーションルール
+
+- スキーマ変更は **必ず** `prisma/schema.prisma` を通じて行う — DBを直接変更しない
+- マイグレーションファイル (`prisma/migrations/`) は自動生成されるため手動編集しない
+- 本番環境では `npx prisma migrate deploy` を使用する（`migrate dev` は開発専用）
+
 ## Commands
 
 ### Build and Run
@@ -163,9 +179,11 @@ go run cmd/server/main.go
 
 ### Database Operations
 ```bash
-npx prisma generate     # Generate Prisma client
-npx prisma migrate dev  # Run database migrations
-npx prisma studio       # Open Prisma Studio
+npx prisma migrate dev --name <name>  # マイグレーション生成・適用（開発用）
+npx prisma migrate deploy             # マイグレーション適用（本番用）
+npx prisma generate                   # Goクライアント再生成
+npx prisma studio                     # Prisma Studio（DB GUI）
+npx prisma migrate status             # マイグレーション適用状況確認
 ```
 
 ### Testing
